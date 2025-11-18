@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblia Digital - App Completa</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            min-height: 600px;
+        }
+        
+        .sidebar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #e9ecef;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .book-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .book-item {
+            padding: 12px 15px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .book-item:hover {
+            background: #007bff;
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .book-item.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .testament-title {
+            font-weight: bold;
+            color: #495057;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .chapter-btn {
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .chapter-btn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        
+        .verses-container {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .verse {
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-left: 4px solid #007bff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .verse-number {
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 10px;
+        }
+        
+        .search-box {
+            margin: 20px 0;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #007bff;
+        }
+        
+        .search-results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .reference {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📖 Biblia Digital</h1>
+            <p>Explora la Palabra de Dios de manera interactiva</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar en la Biblia...">
+                </div>
+                
+                <div class="book-list" id="bookList">
+                    <div class="loading">Cargando libros...</div>
+                </div>
+            </div>
+            
+            <div class="content">
+                <div id="bookInfo">
+                    <h2>Selecciona un libro de la Biblia</h2>
+                    <p>Haz clic en cualquier libro del panel izquierdo para comenzar</p>
+                </div>
+                
+                <div id="chapterSelection" style="display: none;">
+                    <h3 id="chapterTitle"></h3>
+                    <div class="chapter-grid" id="chapterGrid"></div>
+                </div>
+                
+                <div id="versesContent" style="display: none;">
+                    <h3 id="versesTitle"></h3>
+                    <div class="verses-container" id="versesContainer"></div>
+                </div>
+                
+                <div id="searchResults" style="display: none;">
+                    <h3>Resultados de búsqueda</h3>
+                    <div class="search-results" id="resultsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Cargar libros al iniciar
+        document.addEventListener('DOMContentLoaded', loadBooks);
+        
+        // Buscar al escribir
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (e.target.value.length >= 3) {
+                    searchBible(e.target.value);
+                } else if (e.target.value.length === 0) {
+                    showBookSelection();
+                }
+            }, 500);
+        });
+        
+        async function loadBooks() {
+            try {
+                const response = await fetch(`${API_BASE}/books`);
+                const books = await response.json();
+                displayBooks(books);
+            } catch (error) {
+                document.getElementById('bookList').innerHTML = '<div class="error">Error al cargar los libros</div>';
+            }
+        }
+        
+        function displayBooks(books) {
+            const bookList = document.getElementById('bookList');
+            bookList.innerHTML = '';
+            
+            // Separar por testamentos
+            const oldTestament = books.filter(book => book.testament === 'Antiguo');
+            const newTestament = books.filter(book => book.testament === 'Nuevo');
+            
+            // Antiguo Testamento
+            bookList.innerHTML += '<div class="testament-title">Antiguo Testamento</div>';
+            oldTestament.forEach(book => {
+                bookList.innerHTML += `
+                    <div class="book-item" onclick="selectBook('${book.id}', '${book.name}')">
+                        ${book.name}
+                    </div>
+                `;
+            });
+            
+            // Nuevo Testamento
+            bookList.innerHTML += '<div class="testament-title">Nuevo Testamento</div>';
+            newTestament.forEach(book => {
+                bookList.innerHTML += `
+                    <div class="book-item" onclick="selectBook('${book.id}', '${book.name}')">
+                        ${book.name}
+                    </div>
+                `;
+            });
+        }
+        
+        async function selectBook(bookId, bookName) {
+            // Actualizar UI
+            document.querySelectorAll('.book-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Mostrar información del libro
+            document.getElementById('bookInfo').style.display = 'none';
+            document.getElementById('chapterSelection').style.display = 'block';
+            document.getElementById('versesContent').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+            
+            document.getElementById('chapterTitle').textContent = `${bookName} - Selecciona un capítulo`;
+            
+            // Cargar capítulos
+            try {
+                const response = await fetch(`${API_BASE}/books/${bookId}/chapters`);
+                const chapters = await response.json();
+                displayChapters(bookId, bookName, chapters);
+            } catch (error) {
+                console.error('Error loading chapters:', error);
+            }
+        }
+        
+        function displayChapters(bookId, bookName, chapters) {
+            const chapterGrid = document.getElementById('chapterGrid');
+            chapterGrid.innerHTML = '';
+            
+            chapters.forEach(chapter => {
+                chapterGrid.innerHTML += `
+                    <button class="chapter-btn" onclick="selectChapter('${bookId}', '${bookName}', ${chapter.number})">
+                        ${chapter.number}
+                    </button>
+                `;
+            });
+        }
+        
+        async function selectChapter(bookId, bookName, chapterNumber) {
+            document.getElementById('chapterSelection').style.display = 'none';
+            document.getElementById('versesContent').style.display = 'block';
+            
+            document.getElementById('versesTitle').textContent = `${bookName} Capítulo ${chapterNumber}`;
+            
+            try {
+                const response = await fetch(`${API_BASE}/books/${bookId}/chapters/${chapterNumber}/verses`);
+                const verses = await response.json();
+                displayVerses(verses);
+            } catch (error) {
+                console.error('Error loading verses:', error);
+            }
+        }
+        
+        function displayVerses(verses) {
+            const versesContainer = document.getElementById('versesContainer');
+            versesContainer.innerHTML = '';
+            
+            verses.forEach(verse => {
+                versesContainer.innerHTML += `
+                    <div class="verse">
+                        <span class="verse-number">${verse.number}</span>
+                        ${verse.text}
+                    </div>
+                `;
+            });
+        }
+        
+        async function searchBible(query) {
+            document.getElementById('bookInfo').style.display = 'none';
+            document.getElementById('chapterSelection').style.display = 'none';
+            document.getElementById('versesContent').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'block';
+            
+            try {
+                const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+                const results = await response.json();
+                displaySearchResults(results);
+            } catch (error) {
+                console.error('Error searching:', error);
+            }
+        }
+        
+        function displaySearchResults(results) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="verse">No se encontraron resultados</div>';
+                return;
+            }
+            
+            results.forEach(result => {
+                resultsContainer.innerHTML += `
+                    <div class="result-item">
+                        <div class="reference">${result.reference}</div>
+                        <div>${result.text}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        function showBookSelection() {
+            document.getElementById('bookInfo').style.display = 'block';
+            document.getElementById('chapterSelection').style.display = 'none';
+            document.getElementById('versesContent').style.display = 'none';
+            document.getElementById('searchResults').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
